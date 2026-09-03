@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary: #C95D64;
+  --color-secondary-accent: #629390;
+  --color-light-bg: #FFFFFF;
+  --color-light-gray: #E7E7E7;
+  --color-light-text: #3C3C3C;
+  --color-dark-bg: #000000;
+  --color-dark-surface: #212121;
+  --color-dark-gray: #3C3C3C;
+  --color-dark-text: #E7E7E7;
+  --font-heading: var(--font-berkshire), cursive, serif;
+  --font-paragraph: var(--font-lora), serif;
+}
+
+:root {
+  --primary: #C95D64;
+  --secondary-accent: #629390;
+}
+
+body {
+  font-family: var(--font-lora), serif;
+  color: #3C3C3C;
+  background-color: #E7E7E7;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+html.dark body {
+  color: #E7E7E7;
+  background-color: #0B0B0C;
+}
+
+.font-heading {
+  font-family: var(--font-berkshire), cursive, serif;
+}
+
+.font-paragraph {
+  font-family: var(--font-lora), serif;
+}
+
+/* Hide scrollbars for clean app horizontal scrolls */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
