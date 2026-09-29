@@ -16,6 +16,8 @@ import {
 const TODAY_SPECIALS = [
   {
     id: "spec-1",
+    image: "/specials-crepe.jpg",
+    imageAlt: "A golden crepe folded on a plate with ice cream and syrup",
     title: "Affirmations & Cinnamon Crepe",
     time: "20 mins",
     difficulty: "Medium",
@@ -25,15 +27,19 @@ const TODAY_SPECIALS = [
   },
   {
     id: "spec-2",
+    image: "/specials-strawberry.jpg",
+    imageAlt: "Chocolate covered strawberries arranged on a plate",
     title: "Compliment Covered Strawberry",
     time: "5 mins",
     difficulty: "Easy",
-    badge: "Sweet Bite 🍫",
+    badge: "Words of Affirmation 💬",
     prompt: "Dip into a warm moment — share three specific things you genuinely adore about your partner right here, right now.",
     category: "Quick Connection",
   },
   {
     id: "spec-3",
+    image: "/specials-crumb-cake.jpg",
+    imageAlt: "A slice of crumb cake on a white plate",
     title: "Cuddle Crumb Cake",
     time: "15 mins",
     difficulty: "Easy",
@@ -49,32 +55,28 @@ const SPARK_CONVOS = [
     topic: "First Impressions",
     question: "What exact detail made you realize you wanted a second date with me?",
     tag: "Nostalgia",
-    bgLight: "bg-rose-50 border-rose-200 text-rose-950",
-    bgDark: "dark:bg-rose-950/40 dark:border-rose-800/60 dark:text-rose-100",
+    tagLight: "bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300",
   },
   {
     id: "c2",
     topic: "Dream Travel",
     question: "If we could board a plane tonight to any food capital in the world, where?",
     tag: "Future Plans",
-    bgLight: "bg-teal-50 border-teal-200 text-teal-950",
-    bgDark: "dark:bg-teal-950/40 dark:border-teal-800/60 dark:text-teal-100",
+    tagLight: "bg-teal-100 text-teal-700 dark:bg-teal-950/70 dark:text-teal-300",
   },
   {
     id: "c3",
     topic: "Shared Values",
     question: "What is one small tradition we created that you hope we keep forever?",
     tag: "Deep Connection",
-    bgLight: "bg-amber-50 border-amber-200 text-amber-950",
-    bgDark: "dark:bg-amber-950/40 dark:border-amber-800/60 dark:text-amber-100",
+    tagLight: "bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300",
   },
   {
     id: "c4",
     topic: "Love Languages",
     question: "How can I make you feel most cherished and supported this week?",
     tag: "Check-in",
-    bgLight: "bg-purple-50 border-purple-200 text-purple-950",
-    bgDark: "dark:bg-purple-950/40 dark:border-purple-800/60 dark:text-purple-100",
+    tagLight: "bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300",
   },
 ];
 
@@ -149,11 +151,7 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-36 h-36 bg-[#629390]/15 rounded-bl-full pointer-events-none" />
 
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <span className="px-3.5 py-1 rounded-full bg-[#629390] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping" />
-              Connected Live
-            </span>
+          <div className="flex items-center justify-end mb-4">
             <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 flex items-center gap-1">
               <Flame className="w-4 h-4 text-amber-500 fill-amber-500" /> 1 Day Streak
             </span>
@@ -224,48 +222,63 @@ export default function HomePage() {
         <div
           ref={specialsRef}
           onScroll={handleSpecialsScroll}
-          className="flex overflow-x-auto gap-4 no-scrollbar snap-x snap-mandatory"
+          className="flex overflow-x-auto p-5 gap-4 no-scrollbar snap-x snap-mandatory"
         >
           {TODAY_SPECIALS.map((item) => {
             const isDone = completedSpecials[item.id];
             return (
               <div
                 key={item.id}
-                className={`flex-shrink-0 w-[280px] md:w-[340px] snap-start rounded-3xl p-5 shadow-sm border flex flex-col justify-between transition-all duration-300 ${
+                className={`flex-shrink-0 w-[280px] md:w-[340px] snap-start rounded-3xl shadow-sm border flex flex-col justify-between overflow-hidden transition-all duration-300 ${
                   isDone
                     ? "bg-emerald-100/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100"
                     : "bg-neutral-100/90 dark:bg-[#212121] border-[#E7E7E7] dark:border-neutral-800 hover:shadow-md"
                 }`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#C95D64]/15 text-[#C95D64]">
-                      {item.badge}
-                    </span>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {item.time}
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold font-paragraph text-[#3C3C3C] dark:text-white mb-1.5">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
-                    {item.prompt}
-                  </p>
+                {/* Card image */}
+                <div className="relative w-full h-36 md:h-40">
+                  <Image
+                    src={item.image}
+                    alt={item.imageAlt}
+                    fill
+                    sizes="(max-width: 768px) 280px, 340px"
+                    className={`object-cover transition-all duration-300 ${
+                      isDone ? "opacity-60 saturate-50" : ""
+                    }`}
+                  />
                 </div>
 
-                <button
-                  onClick={() => toggleSpecial(item.id)}
-                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                    isDone
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-white dark:bg-neutral-800 text-[#3C3C3C] dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                  }`}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {isDone ? "Ordered & Enjoyed! 💖" : "Order This Special"}
-                </button>
+                <div className="p-5 flex flex-col flex-1 justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#C95D64]/15 text-[#C95D64]">
+                        {item.badge}
+                      </span>
+                      <span className="text-xs text-neutral-600 dark:text-neutral-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {item.time}
+                      </span>
+                    </div>
+
+                    <h3 className="text-lg font-bold font-paragraph text-[#3C3C3C] dark:text-white mb-1.5">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
+                      {item.prompt}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => toggleSpecial(item.id)}
+                    className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      isDone
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "bg-white dark:bg-neutral-800 text-[#3C3C3C] dark:text-neutral-200 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    {isDone ? "Ordered & Enjoyed! 💖" : "Order This Special"}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -341,15 +354,18 @@ export default function HomePage() {
         <div
           ref={convosRef}
           onScroll={handleConvosScroll}
-          className="flex overflow-x-auto gap-4 no-scrollbar snap-x snap-mandatory"
+          className="flex overflow-x-auto p-5 gap-4 no-scrollbar snap-x snap-mandatory"
         >
           {SPARK_CONVOS.map((card) => (
-            <div
+            <Link
               key={card.id}
-              className={`flex-shrink-0 w-[260px] md:w-[300px] snap-start rounded-3xl p-5 shadow-sm border ${card.bgLight} ${card.bgDark} flex flex-col justify-between hover:scale-[1.01] transition-transform duration-300`}
+              href="/conversations"
+              className="flex-shrink-0 w-[260px] md:w-[300px] snap-start rounded-3xl p-5 shadow-sm border bg-neutral-100/90 dark:bg-[#212121] border-[#E7E7E7] dark:border-neutral-800 flex flex-col justify-between cursor-pointer"
             >
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/90 dark:bg-black/60 text-[#3C3C3C] dark:text-neutral-200 shadow-xs">
+                <span
+                  className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs ${card.tagLight}`}
+                >
                   {card.tag}
                 </span>
                 <h3 className="text-sm font-bold text-[#3C3C3C] dark:text-neutral-100 mt-2.5 mb-1 font-paragraph">
@@ -360,13 +376,10 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <Link
-                href="/conversations"
-                className="mt-4 text-xs font-bold text-[#C95D64] hover:underline flex items-center gap-1"
-              >
+              <span className="mt-4 text-xs font-bold text-[#C95D64] flex items-center gap-1">
                 Discuss Together <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+              </span>
+            </Link>
           ))}
         </div>
 

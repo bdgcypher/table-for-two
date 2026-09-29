@@ -51,3 +51,12 @@ html.dark body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Restore pointer cursor on interactive elements (no longer a browser default) */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+}

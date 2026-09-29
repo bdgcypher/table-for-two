@@ -3,76 +3,21 @@
 import React, { useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { Filter, Sparkles, Heart, DollarSign, MapPin, X, RotateCcw, CheckCircle2, RefreshCw } from "lucide-react";
+import { selectRandomDate } from "@/app/dates/actions";
+import type { DateOption } from "@/lib/dateOptions";
+import { INITIAL_DATE_OPTIONS } from "@/lib/dateOptions";
 
-export interface DateOption {
-  id: string;
-  title: string;
-  category: "cozy" | "outdoor" | "romantic" | "quick";
-  cost: "$" | "$$" | "$$$";
-  location: "home" | "out";
-  description: string;
-  prepTime: string;
-}
-
-export const INITIAL_DATE_OPTIONS: DateOption[] = [
-  {
-    id: "1",
-    title: "Homemade Pasta Night",
-    category: "cozy",
-    cost: "$$",
-    location: "home",
-    description: "Make fresh pasta dough together from scratch with wine & candles.",
-    prepTime: "60 mins",
-  },
-  {
-    id: "2",
-    title: "Sunset Stargazing Picnic",
-    category: "outdoor",
-    cost: "$",
-    location: "out",
-    description: "Pack blankets, cozy hot cacao, and watch the stars at a quiet viewpoint.",
-    prepTime: "30 mins",
-  },
-  {
-    id: "3",
-    title: "Speakeasy Cocktail Crawl",
-    category: "romantic",
-    cost: "$$$",
-    location: "out",
-    description: "Dress up and discover two hidden local speakeasies with signature drinks.",
-    prepTime: "120 mins",
-  },
-  {
-    id: "4",
-    title: "15-Minute Dessert Challenge",
-    category: "quick",
-    cost: "$",
-    location: "home",
-    description: "Race to create the wildest ice cream sundae or crepe topping creation.",
-    prepTime: "15 mins",
-  },
-  {
-    id: "5",
-    title: "Vinyl & Candlelight Fondue",
-    category: "cozy",
-    cost: "$$",
-    location: "home",
-    description: "Melt chocolate or cheese fondue while playing favorite old vinyl records.",
-    prepTime: "40 mins",
-  },
-  {
-    id: "6",
-    title: "Midnight Drive & Boba",
-    category: "quick",
-    cost: "$",
-    location: "out",
-    description: "Late night playlist jam session in the car with your favorite boba tea.",
-    prepTime: "45 mins",
-  },
-];
+export type { DateOption } from "@/lib/dateOptions";
+export { INITIAL_DATE_OPTIONS } from "@/lib/dateOptions";
 
 const SEGMENT_COLORS = ["#C95D64", "#212121", "#E7E7E7"];
-const TEXT_COLORS = ["#FFFFFF", "#FFFFFF", "#3C3C3C"];
+
+/**
+ * Number of decorative wheel segments. The segments are purely visual —
+ * they do not represent date ideas. The winning date is chosen by the
+ * server (see app/dates/actions.ts) while the wheel spins.
+ */
+const SEGMENT_COUNT = 12;
 
 interface DateSpinnerProps {
   onDateSelected?: (date: DateOption) => void;
@@ -112,15 +57,19 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
     setIsSpinning(true);
     setWinningDate(null);
 
-    const segmentCount = activeOptions.length;
-    const segmentAngle = 360 / segmentCount;
+    // Ask the backend to pick the winning date idea. The wheel below is
+    // decorative only — the result comes from the server, not from where
+    // the pointer lands.
+    const chosenOption = await selectRandomDate({
+      category: selectedCategory,
+      location: selectedLocation,
+      budget: selectedBudget,
+    });
 
-    // Pick a random index
-    const randomIndex = Math.floor(Math.random() * segmentCount);
-    
     // Angle offset so segment lands in the middle of pointer
+    const segmentAngle = 360 / SEGMENT_COUNT;
     const extraSpins = (Math.floor(Math.random() * 3) + 4) * 360;
-    const targetSegmentCenter = randomIndex * segmentAngle + segmentAngle / 2;
+    const targetSegmentCenter = Math.floor(Math.random() * SEGMENT_COUNT) * segmentAngle + segmentAngle / 2;
     const targetRotation = currentRotation + extraSpins + (360 - (currentRotation % 360)) + (360 - targetSegmentCenter);
 
     setCurrentRotation(targetRotation);
@@ -133,11 +82,10 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
       },
     });
 
-    const chosenOption = activeOptions[randomIndex];
     setWinningDate(chosenOption);
     setIsSpinning(false);
 
-    if (onDateSelected) {
+    if (chosenOption && onDateSelected) {
       onDateSelected(chosenOption);
     }
   };
@@ -188,9 +136,8 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
           className="w-full h-full rounded-full overflow-hidden shadow-2xl border-4 border-white dark:border-[#212121]"
         >
           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-            {activeOptions.map((option, index) => {
-              const count = activeOptions.length;
-              const angle = 360 / count;
+            {Array.from({ length: SEGMENT_COUNT }, (_, index) => {
+              const angle = 360 / SEGMENT_COUNT;
               const startAngle = index * angle;
               const endAngle = (index + 1) * angle;
 
@@ -206,34 +153,8 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
               const pathData = `M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 
               const bgColor = SEGMENT_COLORS[index % SEGMENT_COLORS.length];
-              const textColor = TEXT_COLORS[index % TEXT_COLORS.length];
 
-              // Label angle position
-              const midAngle = startAngle + angle / 2;
-              const midRad = (Math.PI * midAngle) / 180;
-              const textX = 50 + 32 * Math.cos(midRad);
-              const textY = 50 + 32 * Math.sin(midRad);
-
-              return (
-                <g key={option.id}>
-                  <path d={pathData} fill={bgColor} stroke="#ffffff" strokeWidth="0.5" />
-                  <text
-                    x={textX}
-                    y={textY}
-                    fill={textColor}
-                    fontSize="3.8"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    transform={`rotate(${midAngle + 90}, ${textX}, ${textY})`}
-                    className="select-none font-paragraph"
-                  >
-                    {option.title.length > 14
-                      ? option.title.substring(0, 12) + "..."
-                      : option.title}
-                  </text>
-                </g>
-              );
+              return <path key={index} d={pathData} fill={bgColor} stroke="#ffffff" strokeWidth="0.5" />;
             })}
           </svg>
         </motion.div>
@@ -246,7 +167,7 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
         >
           <Sparkles className={`w-5 h-5 sm:w-6 sm:h-6 mb-0.5 text-white ${isSpinning ? "animate-spin" : "group-hover:rotate-12"}`} />
           <span className="text-[10px] sm:text-[11px] font-extrabold leading-tight tracking-wider uppercase text-center font-paragraph">
-            {isSpinning ? "" : "SPIN"}
+            {isSpinning ? "PICKING…" : "SPIN"}
           </span>
         </button>
       </div>
