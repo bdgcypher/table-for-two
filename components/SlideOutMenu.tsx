@@ -55,10 +55,15 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
   const close = useCallback(() => setIsOpen(false), []);
   const open = useCallback(() => setIsOpen(true), []);
 
-  // Close on route change
-  useEffect(() => {
-    close();
-  }, [pathname, close]);
+  // Close on route change. Adjusting state during render is React's
+  // recommended alternative to an effect here — it closes the drawer in the
+  // same commit the pathname changes, with no extra paint of a stale open
+  // drawer in between.
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setIsOpen(false);
+  }
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -109,20 +114,20 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed top-0 right-0 z-[80] h-full w-full md:w-[420px] bg-white dark:bg-[#0B0B0C] shadow-2xl flex flex-col overflow-y-auto"
+              className="fixed top-0 right-0 z-[80] h-full w-full md:w-[420px] bg-white dark:bg-dark-canvas shadow-2xl flex flex-col overflow-y-auto"
               role="dialog"
               aria-modal="true"
               aria-label="Navigation menu"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-5 border-b border-[#E7E7E7] dark:border-neutral-800">
+              <div className="flex items-center justify-between p-5 border-b border-light-gray dark:border-neutral-800">
                 <Link
                   href="/"
                   onClick={close}
                   className="flex items-center gap-2.5 group"
                 >
-                  <Heart className="w-5 h-5 fill-[#C95D64] text-[#C95D64] group-hover:scale-110 transition-transform" />
-                  <span className="text-lg font-bold font-heading text-[#3C3C3C] dark:text-white">
+                  <Heart className="w-5 h-5 fill-primary text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-lg font-bold font-heading text-light-text dark:text-white">
                     Table for Two
                   </span>
                 </Link>
@@ -131,7 +136,7 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                   className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                   aria-label="Close menu"
                 >
-                  <X className="w-5 h-5 text-[#3C3C3C] dark:text-[#E7E7E7]" />
+                  <X className="w-5 h-5 text-light-text dark:text-dark-text" />
                 </button>
               </div>
 
@@ -150,20 +155,20 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                       onClick={close}
                       className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all duration-200 group ${
                         isActive
-                          ? "bg-[#C95D64]/10 text-[#C95D64] font-bold"
-                          : "text-[#3C3C3C] dark:text-[#E7E7E7] hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          ? "bg-primary/10 text-primary font-bold"
+                          : "text-light-text dark:text-dark-text hover:bg-neutral-100 dark:hover:bg-neutral-800"
                       }`}
                     >
                       <Icon
                         className={`w-5 h-5 transition-colors ${
-                          isActive ? "text-[#C95D64]" : "text-neutral-400 dark:text-neutral-500 group-hover:text-[#C95D64]"
+                          isActive ? "text-primary" : "text-neutral-400 dark:text-neutral-500 group-hover:text-primary"
                         }`}
                       />
                       <span className="text-sm font-medium">{link.label}</span>
                       {isActive && (
                         <motion.span
                           layoutId="activeMenuIndicator"
-                          className="ml-auto w-1.5 h-1.5 rounded-full bg-[#C95D64]"
+                          className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
                         />
                       )}
                     </Link>
@@ -171,7 +176,7 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                 })}
               </nav>
 
-              <hr className="mx-5 border-[#E7E7E7] dark:border-neutral-800" />
+              <hr className="mx-5 border-light-gray dark:border-neutral-800" />
 
               {/* Appearance Section */}
               <div className="p-4 space-y-4">
@@ -185,8 +190,8 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                     onClick={() => setTheme("light")}
                     className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-200 group ${
                       theme === "light"
-                        ? "border-[#C95D64] bg-[#C95D64]/5 shadow-sm shadow-[#C95D64]/10"
-                        : "border-[#E7E7E7] dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-500 bg-neutral-50/50 dark:bg-neutral-900/30"
+                        ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                        : "border-light-gray dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-500 bg-neutral-50/50 dark:bg-neutral-900/30"
                     }`}
                     aria-label="Switch to light mode"
                     aria-pressed={theme === "light"}
@@ -204,20 +209,20 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                     </div>
                     <span
                       className={`text-xs font-bold transition-colors ${
-                        theme === "light" ? "text-[#C95D64]" : "text-neutral-500 dark:text-neutral-400"
+                        theme === "light" ? "text-primary" : "text-neutral-500 dark:text-neutral-400"
                       }`}
                     >
                       Light
                     </span>
-                    <div className="w-full h-1.5 rounded-full bg-[#E7E7E7] dark:bg-neutral-700" />
+                    <div className="w-full h-1.5 rounded-full bg-light-gray dark:bg-neutral-700" />
                   </button>
 
                   <button
                     onClick={() => setTheme("dark")}
                     className={`flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-200 group ${
                       theme === "dark"
-                        ? "border-[#C95D64] bg-[#C95D64]/5 shadow-sm shadow-[#C95D64]/10"
-                        : "border-[#E7E7E7] dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-500 bg-neutral-50/50 dark:bg-neutral-900/30"
+                        ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                        : "border-light-gray dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-500 bg-neutral-50/50 dark:bg-neutral-900/30"
                     }`}
                     aria-label="Switch to dark mode"
                     aria-pressed={theme === "dark"}
@@ -235,18 +240,18 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                     </div>
                     <span
                       className={`text-xs font-bold transition-colors ${
-                        theme === "dark" ? "text-[#C95D64]" : "text-neutral-500 dark:text-neutral-400"
+                        theme === "dark" ? "text-primary" : "text-neutral-500 dark:text-neutral-400"
                       }`}
                     >
                       Dark
                     </span>
-                    <div className="w-full h-1.5 rounded-full bg-[#212121]" />
+                    <div className="w-full h-1.5 rounded-full bg-dark-surface" />
                   </button>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="mt-auto p-5 border-t border-[#E7E7E7] dark:border-neutral-800">
+              <div className="mt-auto p-5 border-t border-light-gray dark:border-neutral-800">
                 <p className="text-[11px] text-neutral-400 dark:text-neutral-500 text-center font-paragraph">
                   Table for Two 🍽️💖 • Cooking up Connection
                 </p>

@@ -38,7 +38,7 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop / Tablet Header Bar (Visible on md: and up) */}
-      <header className="hidden md:flex sticky top-0 z-50 w-full bg-white/95 dark:bg-[#212121]/95 backdrop-blur-md border-b border-[#E7E7E7] dark:border-neutral-800 transition-colors duration-300">
+      <header className="hidden md:flex sticky top-0 z-50 w-full bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md border-b border-light-gray dark:border-neutral-800 transition-colors duration-300">
         {/* 3-column grid: left (brand) | center (nav) | right (hamburger) */}
         <div className="w-full px-6 py-3.5 grid grid-cols-[1fr_auto_1fr] items-center 2xl:max-w-[1600px] 2xl:mx-auto">
           {/* Left: Brand Logo & Name */}
@@ -47,8 +47,8 @@ export default function Navigation() {
               <Image src="/logo.png" alt="Table for Two Logo" width={40} height={40} className="object-contain" />
             </div>
             <div>
-              <span className="text-xl font-bold font-heading text-[#3C3C3C] dark:text-[#E7E7E7] flex items-center gap-1.5">
-                Table for Two <Heart className="w-4 h-4 fill-[#C95D64] text-[#C95D64]" />
+              <span className="text-xl font-bold font-heading text-light-text dark:text-dark-text flex items-center gap-1.5">
+                Table for Two <Heart className="w-4 h-4 fill-primary text-primary" />
               </span>
               <span className="text-[11px] font-paragraph text-neutral-500 dark:text-neutral-400 block -mt-0.5 font-medium">
                 Cooking up Connection
@@ -75,7 +75,7 @@ export default function Navigation() {
                   {isActive && (
                     <motion.div
                       layoutId="activeDesktopTab"
-                      className="absolute inset-0 bg-[#C95D64] rounded-full shadow-md shadow-[#C95D64]/30 z-0"
+                      className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/30 z-0"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -91,7 +91,7 @@ export default function Navigation() {
             <button
               onClick={openMenu}
               aria-label="Open menu"
-              className="p-2.5 text-neutral-700 dark:text-neutral-200 hover:text-[#C95D64] transition-all"
+              className="p-2.5 text-neutral-700 dark:text-neutral-200 hover:text-primary transition-all"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -101,7 +101,7 @@ export default function Navigation() {
 
       {/* Mobile Sticky Bottom Navigation (Visible on screens < md) */}
       <nav className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 px-3 pb-3 pt-1 pointer-events-none">
-        <div className="pointer-events-auto bg-white/95 dark:bg-[#212121]/95 backdrop-blur-md border border-[#E7E7E7] dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 dark:shadow-black/40 px-3 py-1.5 flex items-center justify-around transition-colors duration-300">
+        <div className="pointer-events-auto bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md border border-light-gray dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 dark:shadow-black/40 px-3 py-1.5 flex items-center justify-around transition-colors duration-300">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -119,7 +119,7 @@ export default function Navigation() {
                 {isActive && (
                   <motion.div
                     layoutId="activeMobileTab"
-                    className="absolute inset-0 bg-[#C95D64] rounded-full shadow-md shadow-[#C95D64]/30 z-0"
+                    className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/30 z-0"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}

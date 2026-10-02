@@ -1,45 +1,46 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Sun, Moon, Monitor, Settings, ArrowLeft, Check, Palette, Bell } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { RevealDiv, RevealSection } from "@/components/Reveal";
 
 export default function PreferencesPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="min-h-screen px-4 md:px-8 pt-6 pb-28 md:pb-12 flex flex-col space-y-8 bg-white dark:bg-[#000000] text-[#3C3C3C] dark:text-[#E7E7E7] transition-colors duration-300">
+    <div className="min-h-screen px-4 md:px-8 pt-6 pb-28 md:pb-12 flex flex-col space-y-8 bg-white dark:bg-dark-bg text-light-text dark:text-dark-text transition-colors duration-300">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <RevealDiv className="flex items-center gap-4">
         <Link
           href="/"
           className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5 text-[#3C3C3C] dark:text-[#E7E7E7]" />
+          <ArrowLeft className="w-5 h-5 text-light-text dark:text-dark-text" />
         </Link>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-[#3C3C3C] dark:text-white leading-tight flex items-center gap-2">
-            <Settings className="w-6 h-6 text-[#629390]" />
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-light-text dark:text-white leading-tight flex items-center gap-2">
+            <Settings className="w-6 h-6 text-secondary-accent" />
             Preferences
           </h1>
           <p className="text-xs md:text-sm text-neutral-500 dark:text-neutral-400 font-paragraph">
             Customize your Table for Two experience
           </p>
         </div>
-      </div>
+      </RevealDiv>
 
       {/* Appearance Section */}
-      <section className="space-y-5">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-[#E7E7E7] dark:border-neutral-800">
-          <div className="p-2 rounded-xl bg-[#C95D64]/10 text-[#C95D64]">
+      <RevealSection delay={0.07} className="space-y-5">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-light-gray dark:border-neutral-800">
+          <div className="p-2 rounded-xl bg-primary/10 text-primary">
             <Palette className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold font-heading text-[#3C3C3C] dark:text-white">
+            <h2 className="text-lg font-bold font-heading text-light-text dark:text-white">
               Appearance
             </h2>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 font-paragraph">
@@ -57,28 +58,28 @@ export default function PreferencesPage() {
             onClick={() => setTheme("light")}
             className={`relative text-left rounded-3xl p-6 border-2 transition-all duration-300 overflow-hidden group ${
               theme === "light"
-                ? "border-[#C95D64] bg-[#C95D64]/5 shadow-lg shadow-[#C95D64]/10"
-                : "border-[#E7E7E7] dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/30 hover:border-neutral-300 dark:hover:border-neutral-500"
+                ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                : "border-light-gray dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/30 hover:border-neutral-300 dark:hover:border-neutral-500"
             }`}
           >
             {/* Selection checkmark */}
             {theme === "light" && (
-              <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-[#C95D64] flex items-center justify-center shadow-md">
+              <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md">
                 <Check className="w-4 h-4 text-white stroke-[3]" />
               </div>
             )}
 
             {/* Preview mockup */}
-            <div className="w-full h-32 rounded-2xl bg-[#FFFFFF] border border-[#E7E7E7] mb-4 flex flex-col p-3 gap-2 shadow-sm">
+            <div className="w-full h-32 rounded-2xl bg-light-bg border border-light-gray mb-4 flex flex-col p-3 gap-2 shadow-sm">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-[#E7E7E7]" />
-                <div className="w-20 h-2 rounded-full bg-[#E7E7E7]" />
+                <div className="w-5 h-5 rounded-full bg-light-gray" />
+                <div className="w-20 h-2 rounded-full bg-light-gray" />
               </div>
-              <div className="w-3/4 h-2 rounded-full bg-[#E7E7E7]" />
-              <div className="w-1/2 h-2 rounded-full bg-[#E7E7E7]" />
+              <div className="w-3/4 h-2 rounded-full bg-light-gray" />
+              <div className="w-1/2 h-2 rounded-full bg-light-gray" />
               <div className="mt-auto flex gap-2">
-                <div className="w-16 h-6 rounded-lg bg-[#C95D64]" />
-                <div className="w-16 h-6 rounded-lg bg-[#E7E7E7]" />
+                <div className="w-16 h-6 rounded-lg bg-primary" />
+                <div className="w-16 h-6 rounded-lg bg-light-gray" />
               </div>
             </div>
 
@@ -95,7 +96,7 @@ export default function PreferencesPage() {
                 />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#3C3C3C] dark:text-white font-paragraph">
+                <h3 className="text-sm font-bold text-light-text dark:text-white font-paragraph">
                   Light Mode
                 </h3>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -112,19 +113,19 @@ export default function PreferencesPage() {
             onClick={() => setTheme("dark")}
             className={`relative text-left rounded-3xl p-6 border-2 transition-all duration-300 overflow-hidden group ${
               theme === "dark"
-                ? "border-[#C95D64] bg-[#C95D64]/5 shadow-lg shadow-[#C95D64]/10"
-                : "border-[#E7E7E7] dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/30 hover:border-neutral-300 dark:hover:border-neutral-500"
+                ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                : "border-light-gray dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-900/30 hover:border-neutral-300 dark:hover:border-neutral-500"
             }`}
           >
             {/* Selection checkmark */}
             {theme === "dark" && (
-              <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-[#C95D64] flex items-center justify-center shadow-md">
+              <div className="absolute top-4 right-4 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md">
                 <Check className="w-4 h-4 text-white stroke-[3]" />
               </div>
             )}
 
             {/* Preview mockup */}
-            <div className="w-full h-32 rounded-2xl bg-[#0B0B0C] border border-neutral-800 mb-4 flex flex-col p-3 gap-2 shadow-sm">
+            <div className="w-full h-32 rounded-2xl bg-dark-canvas border border-neutral-800 mb-4 flex flex-col p-3 gap-2 shadow-sm">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-neutral-700" />
                 <div className="w-20 h-2 rounded-full bg-neutral-700" />
@@ -132,7 +133,7 @@ export default function PreferencesPage() {
               <div className="w-3/4 h-2 rounded-full bg-neutral-700" />
               <div className="w-1/2 h-2 rounded-full bg-neutral-700" />
               <div className="mt-auto flex gap-2">
-                <div className="w-16 h-6 rounded-lg bg-[#C95D64]" />
+                <div className="w-16 h-6 rounded-lg bg-primary" />
                 <div className="w-16 h-6 rounded-lg bg-neutral-700" />
               </div>
             </div>
@@ -150,7 +151,7 @@ export default function PreferencesPage() {
                 />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#3C3C3C] dark:text-white font-paragraph">
+                <h3 className="text-sm font-bold text-light-text dark:text-white font-paragraph">
                   Dark Mode
                 </h3>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -162,18 +163,18 @@ export default function PreferencesPage() {
         </div>
 
         {/* System preference note */}
-        <div className="flex items-center gap-3 p-4 rounded-2xl bg-neutral-50 dark:bg-[#212121] border border-[#E7E7E7] dark:border-neutral-800">
-          <Monitor className="w-5 h-5 text-[#629390] flex-shrink-0" />
+        <div className="flex items-center gap-3 p-4 rounded-2xl bg-neutral-50 dark:bg-dark-surface border border-light-gray dark:border-neutral-800">
+          <Monitor className="w-5 h-5 text-secondary-accent flex-shrink-0" />
           <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
             Your preference is saved locally and will persist across visits. We also respect your system&apos;s
             default color scheme on first visit.
           </p>
         </div>
-      </section>
+      </RevealSection>
 
       {/* Future: More preference sections could go here */}
       <section className="space-y-4 opacity-50 pointer-events-none">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-[#E7E7E7] dark:border-neutral-800">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-light-gray dark:border-neutral-800">
           <div className="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400">
             <Bell className="w-5 h-5" />
           </div>

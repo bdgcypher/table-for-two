@@ -4,35 +4,37 @@
 
 @theme {
   --color-primary: #C95D64;
+  --color-primary-hover: #b54f56;
   --color-secondary-accent: #629390;
   --color-light-bg: #FFFFFF;
   --color-light-gray: #E7E7E7;
   --color-light-text: #3C3C3C;
   --color-dark-bg: #000000;
+  --color-dark-canvas: #0B0B0C;
   --color-dark-surface: #212121;
   --color-dark-gray: #3C3C3C;
   --color-dark-text: #E7E7E7;
   --font-heading: var(--font-berkshire), cursive, serif;
-  --font-paragraph: var(--font-lora), serif;
+  --font-paragraph: var(--font-montserrat-alternates), serif;
 }
 
 :root {
-  --primary: #C95D64;
-  --secondary-accent: #629390;
+  --primary: var(--color-primary);
+  --secondary-accent: var(--color-secondary-accent);
 }
 
 body {
-  font-family: var(--font-lora), serif;
-  color: #3C3C3C;
-  background-color: #E7E7E7;
+  font-family: var(--font-montserrat-alternates), serif;
+  color: var(--color-light-text);
+  background-color: var(--color-light-gray);
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 html.dark body {
-  color: #E7E7E7;
-  background-color: #0B0B0C;
+  color: var(--color-dark-text);
+  background-color: var(--color-dark-canvas);
 }
 
 .font-heading {
@@ -40,7 +42,7 @@ html.dark body {
 }
 
 .font-paragraph {
-  font-family: var(--font-lora), serif;
+  font-family: var(--font-montserrat-alternates), serif;
 }
 
 /* Hide scrollbars for clean app horizontal scrolls */
@@ -50,6 +52,131 @@ html.dark body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/*
+ * Slim always-visible scrollbar for scrollable lists that still need an
+ * affordance (e.g. the Browse Topics list). Opposite of `.no-scrollbar`:
+ * keep the scrollbar, make it unobtrusive. The track is transparent so it
+ * never draws a box over the list background.
+ */
+.scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: #629390 transparent;
+}
+.scrollbar-slim::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-slim::-webkit-scrollbar-thumb {
+  background-color: #629390;
+  border-radius: 9999px;
+}
+.scrollbar-slim::-webkit-scrollbar-thumb:hover {
+  background-color: #4d7a77;
+}
+
+/*
+ * Flicker for the streak flame icon. No glow — the motion alone has to sell
+ * it, so the icon leans like a flame bending in the air rather than pulsing
+ * in place. It leans LEFT once, returns to neutral, then leans RIGHT once and
+ * settles — two movements, not a continuous waggle, so the two sides read as
+ * distinct flicks. Each stop pairs a rotation with a matching skewY (so the
+ * body bends rather than just tipping) and a small translateX in the same
+ * direction (so the tip leads the lean), all pivoting from the base via
+ * transform-box: fill-box. scaleY/scaleX stay paired so it still licks, and
+ * the sign of the lean always matches the sign of its translateX.
+ *
+ * Plays once on page load at a slow, deliberate pace, then rests: the 0%,
+ * 42% and 100% keyframes are the same resting pose, so it pauses upright
+ * between the two flicks and stopping on the last one is seamless — no
+ * fill-mode needed.
+ */
+@keyframes flame-flicker {
+  0%,
+  42%,
+  100% {
+    transform: scale(1) translate(0, 0) rotate(0deg) skewY(0deg);
+  }
+  20% {
+    transform: scaleY(1.12) scaleX(0.9) translate(-1px, -1.5px) rotate(-7deg) skewY(2.5deg);
+  }
+  72% {
+    transform: scaleY(1.06) scaleX(0.95) translate(1px, -1.5px) rotate(5deg) skewY(-2deg);
+  }
+}
+
+.flame-flicker {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  /* duration | timing | delay | play count — one slow lick on load, then still */
+  animation: flame-flicker 1.5s ease-in-out 0.2s 1;
+}
+
+/*
+ * Streak label: the phrase fades in one character at a time, left to right —
+ * a reveal rather than a movement, so the text never shifts and the baseline
+ * stays rock steady while the flame beside it does all the moving. Opacity is
+ * the only animated property, which also keeps it cheap and free of any
+ * layout shift. The per-letter delay is set inline from the character index,
+ * so the stagger lives with the markup and the keyframes stay reusable. `both`
+ * holds a letter invisible through its delay — that is what makes them appear
+ * one at a time.
+ */
+@keyframes flame-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.flame-sparks {
+  white-space: nowrap;
+}
+
+.flame-letter {
+  display: inline-block;
+  will-change: opacity;
+  animation: flame-fade 0.5s ease-out both;
+}
+
+/* Word gaps: inline-block, so the space is not collapsed away */
+.flame-space {
+  display: inline-block;
+}
+
+/*
+ * Harmony ring fill. The circle's circumference is exactly 100 units, so
+ * animating stroke-dashoffset from 98 (the score) down to 0 sweeps the dash
+ * into view — the same trick as a dasharray progress ring. Deliberately CSS
+ * rather than JS: the resting state is the full ring and the animation is only
+ * opted into when motion is welcome, so reduced-motion users get a complete
+ * ring immediately with no media-query-specific override to get wrong.
+ */
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: 98;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ring-fill {
+    animation: ring-fill 1.4s cubic-bezier(0, 0, 0.2, 1) 0.25s both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flame-flicker,
+  .flame-letter {
+    animation: none;
+  }
 }
 
 /* Restore pointer cursor on interactive elements (no longer a browser default) */
