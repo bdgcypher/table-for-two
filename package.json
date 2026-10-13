@@ -1,14 +1,31 @@
 {
   "name": "table-for-two",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "npx serve@latest out",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run lint && npm run build",
+    "keystore": "bash scripts/generate-android-keystore.sh",
+    "version:info": "node scripts/version-info.mjs",
+    "mobile:sync": "npm run build && cap sync",
+    "android:debug": "npm run mobile:sync && cd android && ./gradlew assembleDebug",
+    "android:release": "npm run mobile:sync && cd android && ./gradlew assembleRelease bundleRelease",
+    "android:open": "cap open android",
+    "ios:sync": "npm run mobile:sync",
+    "ios:open": "cap open ios",
+    "ios:archive": "npm run mobile:sync && cd ios/App && xcodebuild -project App.xcodeproj -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -archivePath build/App.xcarchive archive"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "@supabase/supabase-js": "^2.111.0",
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.28.0",
@@ -17,6 +34,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

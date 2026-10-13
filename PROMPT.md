@@ -13,6 +13,7 @@ The project is scaffolded and running. Do not re-run `create-next-app` or reinst
 - Next.js **16.3.4** (App Router, Turbopack), React **19.2.4**
 - **Tailwind CSS v4** via `@tailwindcss/postcss`
 - framer-motion 12, lucide-react 1.28, TypeScript 5, ESLint 9
+- **Capacitor 8** (`@capacitor/core`, `@capacitor/android`, `@capacitor/ios`, `@capacitor/cli`) for the native Android/iOS shells
 
 **There is no `tailwind.config.ts`.** That file was v3-shaped and was deleted; the v4 config lives entirely in the `@theme` block at the top of `app/globals.css`. Adding one back would be dead config.
 
@@ -48,13 +49,23 @@ Fonts: headings `font-heading` (Berkshire Swash), body `font-paragraph` (Montser
      5. **Preferences** (`/preferences`) - theme selection, reached from the slide-out menu.
 
 3. **Key Component: The Date Spinner (`components/DateSpinner.tsx`)**
-   - Interactive Framer Motion SVG wheel with spring physics on spin, calling the server action in `app/dates/actions.ts`.
+   - Interactive Framer Motion SVG wheel with spring physics on spin, picking the winning idea locally via `lib/dateSelection.ts`.
    - Segment fills reference tokens via CSS variables (`var(--color-primary)`, `var(--color-dark-surface)`, `var(--color-light-gray)`) rather than literals.
    - Center button ("SPIN THE DATE WHEEL!"), top indicator pin, `secondary-accent` filter modal, and a `role="alert"` error card that distinguishes a network failure from "no matches".
 
 4. **PWA Configuration:**
    - `public/manifest.json` is standalone (`"display": "standalone"`) with separate `any` and `maskable` icons. The `any` icons are circular; the maskable icon stays full-bleed square because Android applies its own mask, and `apple-touch-icon.png` stays square because iOS does not support transparency.
    - `viewport-fit=cover` and the `themeColor` array are set in `app/layout.tsx`. `themeColor` must stay a literal hex — Next does not resolve tokens there.
+
+### Native Packaging & Static Export
+
+`Table for Two` ships both as a PWA and as a native Android/iOS app wrapped by Capacitor. Build, signing and store instructions live in [`MOBILE.md`](./MOBILE.md).
+
+- `next.config.ts` sets `output: "export"`, so `npm run build` writes a fully static site to `out/`. There is no Node server in the installed app.
+- `trailingSlash: true` emits `<route>/index.html`, so a deep link such as `/dates/` resolves from a plain file server or the Capacitor WebView without rewrite rules.
+- `images.unoptimized: true` is required: Image Optimization needs a server.
+- **No Server Actions, Route Handlers, cookies, headers, rewrites, redirects or ISR.** Next lists these as unsupported for static exports and a build that introduces one will fail. `lib/dateSelection.ts` exists precisely because the app's only Server Action had to be replaced when this change landed.
+- The `android/` and `ios/` native projects are committed. `npx cap sync` copies `out/` into them — the copied web assets are generated, so never hand-edit them; change the Next source and re-sync.
 
 ### Conventions
 
@@ -85,7 +96,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 - The `NEXT_PUBLIC_` prefix means the value is inlined into the client bundle. The anon key is designed to be public — **only** safe because Row Level Security is enabled on every table.
-- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS entirely and must never be imported into a `"use client"` file. Server Components, Route Handlers, and Server Actions (`app/dates/actions.ts`) are the only places it belongs. Prefer anon + RLS unless a task genuinely needs to bypass it.
+- `SUPABASE_SERVICE_ROLE_KEY` bypasses RLS entirely and must never be imported into a `"use client"` file. Because this app is a **static export** (see Native Packaging & Static Export above) there is no server in this repository to hold it — when it is genuinely needed (billing webhooks, privileged migrations) it belongs in a Supabase Edge Function, which deploys independently of this Next build. Everything in this repo uses the anon key + RLS.
 - Once real credentials exist, replace the placeholder fallbacks in `lib/supabase.ts` with a hard failure so a missing env var is loud instead of silently pointing at a fake project.
 
 #### Proposed Schema

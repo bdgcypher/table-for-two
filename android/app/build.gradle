@@ -1,0 +1,88 @@
+apply plugin: 'com.android.application'
+
+// Version comes from package.json so the web app, Android and iOS all report
+// the same number. CI overrides it from the git tag:
+//   ./gradlew assembleRelease -PappVersionName=0.0.1 -PappVersionCode=1
+//
+// versionCode must be an integer that increases with every Play Store upload;
+// the release workflow derives it from the semver tag (major*10000+minor*100+patch).
+def pkgJson = new groovy.json.JsonSlurper().parseText(file("${rootDir}/../package.json").text)
+def appVersionName = (project.findProperty('appVersionName') ?: pkgJson.version).toString()
+def appVersionCode = (project.findProperty('appVersionCode') ?: 1).toString().toInteger()
+
+// Release signing is driven by android/keystore.properties, which is git-ignored:
+// developers create it once with scripts/generate-android-keystore.sh, and CI
+// writes it from repository secrets. When it is missing the release build falls
+// back to the debug key so a sideloadable APK can always be produced — such an
+// APK installs fine over USB/sideload, but it is not suitable for the Play Store
+// and cannot upgrade an install signed with a different key.
+def keystorePropsFile = rootProject.file('keystore.properties')
+def hasReleaseKeystore = keystorePropsFile.exists()
+def keystoreProps = new Properties()
+if (hasReleaseKeystore) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+android {
+    namespace = "com.tablefor2.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.tablefor2.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            if (hasReleaseKeystore) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
