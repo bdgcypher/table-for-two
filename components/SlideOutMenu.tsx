@@ -16,6 +16,7 @@ import {
   Heart,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
+import { isActivePath } from "@/lib/nav";
 
 // ─── Context ────────────────────────────────────────────────────────────────
 
@@ -146,7 +147,7 @@ export default function SlideOutMenu({ children }: { children: React.ReactNode }
                   Navigation
                 </p>
                 {menuNavLinks.map((link) => {
-                  const isActive = pathname === link.href;
+                  const isActive = isActivePath(pathname, link.href);
                   const Icon = link.icon;
                   return (
                     <Link

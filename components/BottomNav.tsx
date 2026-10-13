@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Home, UtensilsCrossed, Sparkles, MessageCircleHeart, Heart, Menu } from "lucide-react";
 import { useMenu } from "@/components/SlideOutMenu";
+import { isActivePath } from "@/lib/nav";
 
 export const navItems = [
   {
@@ -59,7 +60,7 @@ export default function Navigation() {
           {/* Center: Nav Links — truly centered in the grid column */}
           <nav className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-800/80 p-1.5 rounded-full border border-neutral-200 dark:border-neutral-700/60 shadow-inner justify-self-center">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = isActivePath(pathname, item.href);
               const Icon = item.icon;
 
               return (
@@ -103,7 +104,7 @@ export default function Navigation() {
       <nav className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 px-3 pb-3 pt-1 pointer-events-none">
         <div className="pointer-events-auto bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md border border-light-gray dark:border-neutral-800 rounded-full shadow-xl shadow-black/10 dark:shadow-black/40 px-3 py-1.5 flex items-center justify-around transition-colors duration-300">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = isActivePath(pathname, item.href);
             const Icon = item.icon;
 
             return (
