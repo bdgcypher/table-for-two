@@ -57,11 +57,28 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK platform and build tools
-        run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+      # No android-actions/setup-android here on purpose: it shells out to
+      # `sdkmanager tools`, and the `tools` package no longer exists in the SDK
+      # repository, so the action fails before doing anything useful. The
+      # ubuntu-latest image already ships an Android SDK, so we just add the
+      # platform and build tools this project compiles against.
+      - name: Install Android SDK platform and build tools
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          SDKMANAGER="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -maxdepth 3 -name sdkmanager -type f 2>/dev/null | head -1)"
+          fi
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found under $SDK_ROOT"
+            exit 1
+          fi
+          echo "using $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --install "platforms;android-36" "build-tools;36.0.0"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
 
       # A tag is authoritative. Without one (manual dispatch, or a branch run)
       # fall back to package.json so the build still gets a valid version
