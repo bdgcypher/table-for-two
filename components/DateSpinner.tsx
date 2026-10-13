@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { Filter, Sparkles, DollarSign, MapPin, X, RotateCcw, CheckCircle2, RefreshCw } from "lucide-react";
-import { selectRandomDate } from "@/app/dates/actions";
+import { candidateDateOptions, selectRandomDate } from "@/lib/dateSelection";
 import type { DateOption } from "@/lib/dateOptions";
 import { INITIAL_DATE_OPTIONS } from "@/lib/dateOptions";
 
@@ -21,8 +21,8 @@ const SEGMENT_COLORS = [
 
 /**
  * Number of decorative wheel segments. The segments are purely visual —
- * they do not represent date ideas. The winning date is chosen by the
- * server (see app/dates/actions.ts) while the wheel spins.
+ * they do not represent date ideas. The winning date is picked locally
+ * (see lib/dateSelection.ts) before the wheel starts spinning.
  */
 const SEGMENT_COUNT = 12;
 
@@ -43,15 +43,13 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
 
   const controls = useAnimation();
 
-  // Filter items based on category, location, and budget
-  const filteredOptions = options.filter((item) => {
-    if (selectedCategory !== "all" && item.category !== selectedCategory) return false;
-    if (selectedLocation !== "all" && item.location !== selectedLocation) return false;
-    if (selectedBudget !== "all" && item.cost !== selectedBudget) return false;
-    return true;
-  });
-
-  const activeOptions = filteredOptions.length >= 2 ? filteredOptions : options;
+  // Filter items based on category, location, and budget. `candidateDateOptions`
+  // is shared with the selection below, so the count on the filter button and
+  // the pool a spin draws from can never disagree.
+  const activeOptions = candidateDateOptions(
+    { category: selectedCategory, location: selectedLocation, budget: selectedBudget },
+    options
+  );
 
   const resetFilters = () => {
     setSelectedCategory("all");
@@ -66,23 +64,15 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
     setWinningDate(null);
     setSpinError(null);
 
-    // Ask the backend to pick the winning date idea. The wheel below is
-    // decorative only — the result comes from the server, not from where
-    // the pointer lands.
-    let chosenOption: DateOption | null = null;
-    try {
-      chosenOption = await selectRandomDate({
-        category: selectedCategory,
-        location: selectedLocation,
-        budget: selectedBudget,
-      });
-    } catch {
-      // Network or server failure — surface it instead of silently spinning
-      // to an empty result.
-      setSpinError("We couldn’t reach the kitchen. Please try spinning again.");
-      setIsSpinning(false);
-      return;
-    }
+    // Pick the winning date idea up front. The wheel below is decorative only —
+    // the result comes from the filtered pool, never from where the pointer
+    // lands. Selection is local (see lib/dateSelection.ts), which is what lets
+    // the spinner keep working offline inside the native app.
+    const chosenOption = selectRandomDate({
+      category: selectedCategory,
+      location: selectedLocation,
+      budget: selectedBudget,
+    });
 
     if (chosenOption === null) {
       setSpinError("No date ideas match those filters. Try loosening them and spin again.");
@@ -204,7 +194,7 @@ export default function DateSpinner({ onDateSelected }: DateSpinnerProps) {
         </button>
       </div>
 
-      {/* Spin failure — server unreachable, or no ideas match the filters */}
+      {/* Spin failure — the active filters exclude every date idea */}
       {spinError && (
         <div
           role="alert"

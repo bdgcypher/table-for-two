@@ -1,7 +1,7 @@
 /**
  * Shared date-idea data. Deliberately free of React directives so it can be
- * imported by both Client Components (the wheel UI) and Server code (the
- * random-selection action in app/dates/actions.ts).
+ * imported by both Client Components (the wheel UI) and the selection module
+ * in lib/dateSelection.ts.
  */
 export interface DateOption {
   id: string;
