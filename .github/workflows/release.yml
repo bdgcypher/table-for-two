@@ -15,7 +15,15 @@ on:
   push:
     tags:
       - "v*"
+  # Manual runs are for re-building an existing version without cutting a new
+  # tag. They only produce workflow artifacts — the GitHub Release step is
+  # gated on a real tag, so a dispatch can never clobber a published release.
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build, e.g. 0.0.1. Defaults to package.json."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -55,9 +63,25 @@ jobs:
       - name: Install SDK platform and build tools
         run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Resolve version from tag
+      # A tag is authoritative. Without one (manual dispatch, or a branch run)
+      # fall back to package.json so the build still gets a valid version
+      # instead of failing the semver check in version-info.mjs.
+      - name: Resolve version
         id: version
-        run: node scripts/version-info.mjs "${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            CANDIDATE="$INPUT_VERSION"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            CANDIDATE="$GITHUB_REF_NAME"
+          else
+            CANDIDATE="v$(node -p 'require("./package.json").version')"
+            echo "::notice::No version tag on this run; using package.json ($CANDIDATE)."
+          fi
+          node scripts/version-info.mjs "$CANDIDATE" >> "$GITHUB_OUTPUT"
+          echo "building version: $CANDIDATE"
 
       - name: Configure release signing
         env:
@@ -147,9 +171,25 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
-      - name: Resolve version from tag
+      # A tag is authoritative. Without one (manual dispatch, or a branch run)
+      # fall back to package.json so the build still gets a valid version
+      # instead of failing the semver check in version-info.mjs.
+      - name: Resolve version
         id: version
-        run: node scripts/version-info.mjs "${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            CANDIDATE="$INPUT_VERSION"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            CANDIDATE="$GITHUB_REF_NAME"
+          else
+            CANDIDATE="v$(node -p 'require("./package.json").version')"
+            echo "::notice::No version tag on this run; using package.json ($CANDIDATE)."
+          fi
+          node scripts/version-info.mjs "$CANDIDATE" >> "$GITHUB_OUTPUT"
+          echo "building version: $CANDIDATE"
 
       - name: List schemes
         run: xcodebuild -list -project ios/App/App.xcodeproj
