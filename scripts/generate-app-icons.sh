@@ -4,8 +4,7 @@
 #
 # Run after the logo changes. Committed output lives in:
 #   android/app/src/main/res/mipmap-*/ic_launcher{,_round,_foreground}.png
-#   android/app/src/main/res/values/ic_launcher_background.xml          (light)
-#   android/app/src/main/res/values-night/ic_launcher_background.xml    (dark)
+#   android/app/src/main/res/values/ic_launcher_background.xml
 #   ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png       (light)
 #   ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x-dark.png  (dark)
 #
@@ -13,7 +12,7 @@
 #
 # Design: the brand mark in `primary` rose on a white backdrop, matching the
 # existing web icons (public/icon-512.png is the same mark on a white circle),
-# and the same mark on the `dark-canvas` backdrop for dark mode. Android's
+# and the same mark on the `dark-canvas` backdrop for iOS dark mode. Android's
 # adaptive icon gets the mark on a *transparent* foreground so the launcher can
 # apply its own mask over the plate colour, which is why the plate is a colour
 # resource and not part of the artwork.
@@ -28,8 +27,9 @@ cd "$(dirname "$0")/.."
 SRC="${ICON_SOURCE:-public/logo.png}"
 # --color-primary from app/globals.css — the mark is already drawn in it.
 BRAND="${ICON_BRAND_COLOR:-#C95D64}"
-# --color-dark-canvas: the dark-mode plate, so the icon matches the app's own
-# dark background rather than reading as a hole punched in the wallpaper.
+# --color-dark-canvas: the backdrop of the iOS dark icon, so it matches the
+# app's own dark background rather than reading as a hole punched in the
+# wallpaper. Android has no equivalent — see the plate section below.
 DARK="${ICON_DARK_COLOR:-#0B0B0C}"
 PLATE_LIGHT="${ICON_LIGHT_COLOR:-#FFFFFF}"
 
@@ -162,22 +162,36 @@ echo "safe zone ok (mark ${FILL_ADAPTIVE}% of the 108dp canvas, ink inside the 6
 
 # The adaptive background is a colour resource, not artwork: the launcher masks
 # the two layers together, and the foreground's transparent surround lets this
-# colour show through. values-night is the icon's dark-mode version — the
-# adaptive-icon XMLs reference this colour by name, so the launcher swaps the
-# plate itself and no second icon definition is needed.
-write_plate() { # dirname colour
-  local dir="android/app/src/main/res/$1"
-  mkdir -p "$dir"
-  cat > "$dir/ic_launcher_background.xml" <<EOF
+# colour show through.
+#
+# There is deliberately no values-night override. "Add a night plate" is the
+# obvious way to give Android a dark-mode icon, and it does not work: the
+# platform does not resolve launcher icons under the night configuration. Built
+# with values=#FF0000 and values-night=#0000FF and installed on API 36, a Pixel
+# Launcher started cold in dark mode still drew the red plate. Android's only
+# app-controlled icon theming is the <monochrome> layer declared in the
+# adaptive-icon XMLs, which the system tints — see MOBILE.md §8.
+PLATE_RES="android/app/src/main/res/values/ic_launcher_background.xml"
+mkdir -p "$(dirname "$PLATE_RES")"
+cat > "$PLATE_RES" <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">$2</color>
+    <color name="ic_launcher_background">$PLATE_LIGHT</color>
 </resources>
 EOF
-}
-write_plate values "$PLATE_LIGHT"
-write_plate values-night "$DARK"
-echo "plates: values=$PLATE_LIGHT  values-night=$DARK"
+echo "plate: values=$PLATE_LIGHT"
+
+# The themed-icon layer lives in the adaptive-icon XMLs, which the script does
+# not own. Assert it is still there: without <monochrome> the system falls back
+# to whatever it derives from the colour icon, which does not look like the mark.
+for layer in ic_launcher ic_launcher_round; do
+  ADAPTIVE="android/app/src/main/res/mipmap-anydpi-v26/$layer.xml"
+  grep -q '<monochrome' "$ADAPTIVE" || {
+    echo "error: $ADAPTIVE declares no <monochrome> layer, so themed icons" >&2
+    echo "       would fall back to the icon Android derives from the colour one." >&2
+    exit 1
+  }
+done
 
 # No mipmap-night legacy icons on purpose: the adaptive icon supersedes them on
 # every device that has a dark mode (API 26+ takes mipmap-anydpi-v26 over the
@@ -222,5 +236,5 @@ echo "Installed:"
 echo "  android/app/src/main/res/mipmap-*/ic_launcher.png            (48-192px)"
 echo "  android/app/src/main/res/mipmap-*/ic_launcher_round.png      (48-192px)"
 echo "  android/app/src/main/res/mipmap-*/ic_launcher_foreground.png (108-432px)"
-echo "  android/app/src/main/res/values{,-night}/ic_launcher_background.xml"
+echo "  android/app/src/main/res/values/ic_launcher_background.xml"
 echo "  $IOS_DIR/AppIcon-512@2x{,-dark}.png (1024px)"

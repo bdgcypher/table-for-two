@@ -214,33 +214,42 @@ distribute through TestFlight before App Store review.
 ## 8. App icons
 
 The launcher icons are generated from the brand mark, `public/logo.png` — the
-same artwork the web icons use — in a light *and* a dark variant:
+same artwork the web icons use — in a light variant and, where the platform has
+one, a dark variant:
 
 ```bash
 npm run icons:native
 ```
 
 That writes every Android mipmap (legacy square, round and adaptive
-foreground), the light and dark 1024px iOS icons, and the Android plate colour
-for each mode:
+foreground), the light and dark 1024px iOS icons, and the Android plate colour:
 
 | Surface | Light | Dark |
 | --- | --- | --- |
-| Android adaptive plate | `res/values/ic_launcher_background.xml` → white | `res/values-night/…` → `dark-canvas` `#0B0B0C` |
-| Android legacy + round bitmaps | white plate baked into the PNG | — no night variant, see below |
 | iOS icon | `AppIcon-512@2x.png` | `AppIcon-512@2x-dark.png` |
+| Android colour icon | white plate, `values/ic_launcher_background.xml` | — none; see below |
+| Android themed icon | — | the `<monochrome>` layer, tinted from the wallpaper |
 
-**How the dark variant is wired up.**
+**Dark mode.**
 
-- **Android** — the adaptive-icon XMLs reference `@color/ic_launcher_background`
-  by *name*, so a `values-night` override is the entire dark variant: the
-  launcher resolves the plate colour itself, under whatever configuration it is
-  drawing in. There is no second icon definition and no `mipmap-night-*` set.
-- **iOS** — `Contents.json` lists the dark tile with
+- **iOS** has a real dark icon: `Contents.json` lists the dark tile with
   `{"appearance":"luminosity","value":"dark"}`, the asset-catalog slot iOS 18+
-  picks up on its own when the device is in dark mode. The script refuses to run
-  if that entry is missing, because an unlisted file in an icon set is silently
-  ignored at runtime.
+  switches to on its own when the device is in dark mode. It is checkable in the
+  built app — `strings App.app/Assets.car` lists `AppIcon-512@2x-dark.png`
+  alongside `UIAppearanceDark`. The script refuses to run if that entry is
+  missing, because an unlisted file in an icon set is silently ignored.
+- **Android has no per-app dark icon.** A launcher icon is not resolved under
+  the night configuration, so a `values-night` plate is ignored in practice:
+  built with `values=#FF0000` and `values-night=#0000FF` and installed on API 36,
+  a Pixel Launcher restarted cold in dark mode still drew the **red** plate. The
+  generator therefore writes no night plate, and the only app-controlled icon
+  theming Android offers is the themed icon — the `<monochrome>` layer in the
+  adaptive-icon XMLs, which Android 13+ tints with the user's wallpaper colours
+  once they turn themed icons on. It points at the foreground, whose shape is
+  the mark's alpha, and the system replaces its colour with the tint; without
+  the layer Android derives a themed icon of its own that does not look like the
+  mark. The script asserts the layer is still declared, since it lives in an XML
+  the generator does not own.
 - The **legacy bitmaps deliberately have no night variant**: API 26+ resolves
   `mipmap-anydpi-v26` in preference to the density PNGs, and night mode only
   exists from API 29, so a legacy night set could never be selected.
@@ -290,8 +299,12 @@ The script also enforces the remaining platform rules:
   `android/app/src/main/res/drawable*/splash.png` and the iOS
   `Assets.xcassets/Splash.imageset`. Rebrand it before a store submission.
 - **The web/PWA icons have no dark variant.** `public/icon-*.png` are generated
-  separately (see `PROMPT.md`) and are single-variant; only the native launcher
-  icons follow the system theme.
+  separately (see `PROMPT.md`) and are single-variant, so an app installed from
+  the browser shows the same icon in both themes.
 - **No iOS *tinted* app icon.** iOS 18 derives its third appearance (tinted)
   by desaturating the light icon. Add `AppIcon-512@2x-tinted.png` and a
   `"value":"tinted"` entry to `Contents.json` to control it explicitly.
+- **The Android themed icon has never been seen rendered.** The `<monochrome>`
+  layer is verified to be in the packaged APK, but the tinted result needs a
+  device whose launcher supports themed icons; the CI emulator image has no
+  wallpaper theming at all, so it cannot exercise the path.

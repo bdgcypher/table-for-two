@@ -2,4 +2,10 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <!-- The themed-icon layer. Android 13+ tints this with the user's
+         wallpaper colours when they turn on themed icons, which is the only
+         dark-mode icon theming Android offers an app; see MOBILE.md §8. It
+         reuses the foreground, whose shape is the mark's alpha, and the system
+         replaces its colour with the tint. -->
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>
