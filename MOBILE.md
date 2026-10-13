@@ -211,7 +211,33 @@ distribute through TestFlight before App Store review.
 
 ---
 
-## 8. Known gaps
+## 8. App icons
+
+The launcher icons are generated from the brand mark, `public/logo.png` — the
+same artwork the web icons use:
+
+```bash
+npm run icons:native
+```
+
+That writes every Android mipmap (legacy square, round and adaptive foreground)
+and the 1024px iOS icon. Run it again whenever the logo changes, then rebuild.
+The script enforces the platform rules for you:
+
+- the **iOS icon carries no alpha** — the App Store rejects icons that do, so it
+  is flattened onto white;
+- the **Android adaptive foreground is transparent** outside the mark, because
+  the launcher masks it over `ic_launcher_background` (kept white);
+- only the mark's *alpha channel* is used, with the shape filled in the
+  `primary` rose, which avoids colour fringing when the source is upscaled.
+
+> The source mark is small (`public/logo.png` is 255×271), so the 1024px iOS
+> icon is an upscale and looks slightly soft. Supply a larger or vector logo at
+> `public/logo.png` and re-run the script for a crisper result.
+
+---
+
+## 9. Known gaps
 
 - **No service worker.** The PWA is marked installable and the native app bundles
   all its assets, but there is no offline cache layer in the web build.
@@ -224,3 +250,6 @@ distribute through TestFlight before App Store review.
 - **`npm run ios:archive` and the CI iOS job need macOS.** Everything else works
   anywhere.
 - **The iOS `.ipa` path is unverified** — see §7.
+- **The launch splash is still Capacitor's default** (blue logo on white) in
+  `android/app/src/main/res/drawable*/splash.png` and the iOS
+  `Assets.xcassets/Splash.imageset`. Rebrand it before a store submission.

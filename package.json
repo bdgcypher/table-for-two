@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run lint && npm run build",
     "keystore": "bash scripts/generate-android-keystore.sh",
+    "icons:native": "bash scripts/generate-app-icons.sh",
     "version:info": "node scripts/version-info.mjs",
     "mobile:sync": "npm run build && cap sync",
     "android:debug": "npm run mobile:sync && cd android && ./gradlew assembleDebug",
