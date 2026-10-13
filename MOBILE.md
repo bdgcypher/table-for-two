@@ -214,20 +214,56 @@ distribute through TestFlight before App Store review.
 ## 8. App icons
 
 The launcher icons are generated from the brand mark, `public/logo.png` — the
-same artwork the web icons use:
+same artwork the web icons use — in a light *and* a dark variant:
 
 ```bash
 npm run icons:native
 ```
 
-That writes every Android mipmap (legacy square, round and adaptive foreground)
-and the 1024px iOS icon. Run it again whenever the logo changes, then rebuild.
-The script enforces the platform rules for you:
+That writes every Android mipmap (legacy square, round and adaptive
+foreground), the light and dark 1024px iOS icons, and the Android plate colour
+for each mode:
 
-- the **iOS icon carries no alpha** — the App Store rejects icons that do, so it
-  is flattened onto white;
+| Surface | Light | Dark |
+| --- | --- | --- |
+| Android adaptive plate | `res/values/ic_launcher_background.xml` → white | `res/values-night/…` → `dark-canvas` `#0B0B0C` |
+| Android legacy + round bitmaps | white plate baked into the PNG | — no night variant, see below |
+| iOS icon | `AppIcon-512@2x.png` | `AppIcon-512@2x-dark.png` |
+
+**How the dark variant is wired up.**
+
+- **Android** — the adaptive-icon XMLs reference `@color/ic_launcher_background`
+  by *name*, so a `values-night` override is the entire dark variant: the
+  launcher resolves the plate colour itself, under whatever configuration it is
+  drawing in. There is no second icon definition and no `mipmap-night-*` set.
+- **iOS** — `Contents.json` lists the dark tile with
+  `{"appearance":"luminosity","value":"dark"}`, the asset-catalog slot iOS 18+
+  picks up on its own when the device is in dark mode. The script refuses to run
+  if that entry is missing, because an unlisted file in an icon set is silently
+  ignored at runtime.
+- The **legacy bitmaps deliberately have no night variant**: API 26+ resolves
+  `mipmap-anydpi-v26` in preference to the density PNGs, and night mode only
+  exists from API 29, so a legacy night set could never be selected.
+
+**Mark sizing.** The mark's bounding box spans 46% of the adaptive canvas, and
+62% / 56% / 66% of the legacy-square, round and iOS canvases. The artwork's ink
+reaches the corners of its own bounding box, so the adaptive number is set by
+geometry rather than taste: Android guarantees only a 66dp circle inside the
+108dp layer, and at 48% the mark's outer corners leave that circle — which is
+exactly the part a circular launcher mask cuts off. The script measures the
+finished PNG and **fails rather than install** anything that leaks outside the
+circle. `ICON_SCALE` rescales the whole set in one step:
+
+```bash
+ICON_SCALE=90 npm run icons:native     # 10% smaller on every surface
+```
+
+The script also enforces the remaining platform rules:
+
+- the **iOS icons carry no alpha** — the App Store rejects icons that do, so
+  they are flattened onto their plate;
 - the **Android adaptive foreground is transparent** outside the mark, because
-  the launcher masks it over `ic_launcher_background` (kept white);
+  the launcher masks it over the plate colour;
 - only the mark's *alpha channel* is used, with the shape filled in the
   `primary` rose, which avoids colour fringing when the source is upscaled.
 
@@ -253,3 +289,9 @@ The script enforces the platform rules for you:
 - **The launch splash is still Capacitor's default** (blue logo on white) in
   `android/app/src/main/res/drawable*/splash.png` and the iOS
   `Assets.xcassets/Splash.imageset`. Rebrand it before a store submission.
+- **The web/PWA icons have no dark variant.** `public/icon-*.png` are generated
+  separately (see `PROMPT.md`) and are single-variant; only the native launcher
+  icons follow the system theme.
+- **No iOS *tinted* app icon.** iOS 18 derives its third appearance (tinted)
+  by desaturating the light icon. Add `AppIcon-512@2x-tinted.png` and a
+  `"value":"tinted"` entry to `Contents.json` to control it explicitly.
