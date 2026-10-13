@@ -48,6 +48,12 @@ PLATE_LIGHT="${ICON_LIGHT_COLOR:-#FFFFFF}"
 # ICON_SCALE multiplies all of them, so the whole set can be nudged in one step:
 #   ICON_SCALE=90 npm run icons:native     # 10% smaller on every surface
 SCALE="${ICON_SCALE:-100}"
+case "$SCALE" in
+  '' | *[!0-9]*)
+    echo "error: ICON_SCALE must be a whole percentage, got '${SCALE}'." >&2
+    exit 1
+    ;;
+esac
 scale() { echo $(( $1 * SCALE / 100 )); }
 FILL_ADAPTIVE=$(scale 46)
 FILL_IOS=$(scale 66)
@@ -77,6 +83,10 @@ magick "$WORK/mask-trim.png" -filter Lanczos -resize x1400 -level 28%,72% "$WORK
 echo "mask built from $SRC (mark $(identify -quiet -format '%wx%h' "$WORK/mask-trim.png"))"
 
 # ── 2. Helpers ──────────────────────────────────────────────────────────────
+# ImageMagick stamps a creation time into every PNG it writes, so without this
+# two runs of this script differ in bytes with nothing actually changed — and a
+# "zoom the mark 5%" tweak would land as a diff of all 20 files.
+PNG_OPTS=(-define png:exclude-chunks=date,time)
 
 # The mark's coverage on a full-canvas black field, so CopyOpacity defines alpha
 # across the whole icon rather than only where the scaled mark happens to sit.
@@ -93,7 +103,7 @@ rose_mark() { # size fill out
   local size=$1 fill=$2 out=$3
   alpha_field "$size" "$fill" "$WORK/_a.png"
   magick -size "${size}x${size}" xc:"$BRAND" "$WORK/_a.png" \
-    -alpha off -compose CopyOpacity -composite "$out"
+    -alpha off -compose CopyOpacity -composite "${PNG_OPTS[@]}" "$out"
 }
 
 # The mark on an opaque plate of the given colour — the icon shape iOS masks
@@ -102,7 +112,7 @@ plate_tile() { # size fill colour out
   local size=$1 fill=$2 color=$3 out=$4
   rose_mark "$size" "$fill" "$WORK/_m.png"
   magick -size "${size}x${size}" xc:"$color" "$WORK/_m.png" \
-    -gravity center -composite -alpha off "$out"
+    -gravity center -composite -alpha off "${PNG_OPTS[@]}" "$out"
 }
 
 # The mark on a plate-coloured disc, transparent outside it — ic_launcher_round.
@@ -112,7 +122,7 @@ plate_disc() { # size fill colour out
   rose_mark "$size" "$fill" "$WORK/_m.png"
   magick -size "${size}x${size}" xc:none \
     -fill "$color" -draw "circle $r,$r $r,0" \
-    "$WORK/_m.png" -gravity center -composite "$out"
+    "$WORK/_m.png" -gravity center -composite "${PNG_OPTS[@]}" "$out"
 }
 
 # ── 3. Android ──────────────────────────────────────────────────────────────
